@@ -1,0 +1,182 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for Next.js + Laravel API Development
+
+## 🎯 Project Overview
+This project uses Next.js frontend with Laravel API backend, targeting AWS ECS deployment with proper environment variable management and security considerations.
+
+## 🚨 CRITICAL RULES - NEVER VIOLATE
+
+### Laravel API Rules
+
+#### Environment Variable Usage
+- NEVER hardcode configuration values in config files
+- ALWAYS use env() function with fallback values
+- ALWAYS implement environment-specific configurations
+
+```php
+// ❌ FORBIDDEN
+'host' => 'localhost',
+'allowed_origins' => ['*'],
+
+// ✅ REQUIRED
+'host' => env('DB_HOST', 'localhost'),
+'allowed_origins' => env('APP_ENV') === 'local' ? ['http://localhost:3000'] : explode(',', env('CORS_ALLOWED_ORIGINS', '')),
+```
+
+#### CORS Configuration
+- MUST implement environment-based CORS settings
+- NEVER use '*' for allowed_origins in production
+- ALWAYS specify exact domains for production
+
+```php
+// Required implementation in config/cors.php
+'allowed_origins' => env('APP_ENV') === 'local' ? [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+] : array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', ''))),
+```
+
+#### Database Configuration
+- MUST support both PostgreSQL and MySQL
+- ALWAYS use environment variables for all DB settings
+- NEVER hardcode database credentials
+
+#### File Storage
+- MUST support both local and S3 storage
+- IMPLEMENT MinIO compatibility for development
+- USE environment variables for storage configuration
+
+```php
+// Required in config/filesystems.php
+'default' => env('FILESYSTEM_DISK', 'local'),
+'s3' => [
+    'endpoint' => env('AWS_ENDPOINT'), // MinIO support
+    'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+]
+```
+
+#### Session & Cache
+- SUPPORT both Redis and file-based drivers
+- IMPLEMENT subdomain session sharing
+- CONFIGURE HTTPS-ready session settings
+
+### Next.js Frontend Rules
+
+#### Environment Variables
+- USE NEXT_PUBLIC_ prefix for browser-accessible variables
+- NEVER hardcode API URLs
+- ALWAYS implement environment-specific API endpoints
+
+```javascript
+// ✅ REQUIRED
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// ❌ FORBIDDEN
+const API_URL = 'http://localhost:8180';
+```
+
+#### API Communication
+- ALWAYS use environment variables for API base URLs
+- IMPLEMENT withCredentials for CORS
+- HANDLE both development and production endpoints
+
+```javascript
+// Required pattern
+const apiClient = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
+});
+```
+## 📝 Environment Variable Management
+
+### Required .env.example Structure
+MUST maintain complete .env.example with all variables:
+
+```bash
+# Application
+APP_NAME=MyApp
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8180
+
+# Database
+DB_CONNECTION=pgsql
+DB_HOST=localhost
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=
+
+# Cache & Session
+CACHE_DRIVER=redis
+SESSION_DRIVER=redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# File Storage
+FILESYSTEM_DISK=local
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=ap-northeast-1
+AWS_BUCKET=
+AWS_ENDPOINT=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+
+# Next.js Variables
+NEXT_PUBLIC_API_URL=http://localhost:8180
+NEXT_PUBLIC_APP_ENV=development
+```
+
+## 🛡️ Security Requirements
+
+### Production Settings
+- APP_DEBUG=false in production
+- Specific domains only in CORS
+- HTTPS-enforced session cookies
+- Secure environment variable management
+
+### Development vs Production
+ALWAYS implement conditional logic:
+```php
+$setting = env('APP_ENV') === 'local' 
+    ? $developmentValue 
+    : $productionValue;
+```
+
+## 🔄 Deployment Preparation
+
+### AWS ECS Compatibility
+- Design for containerized deployment
+- Use Parameter Store/Secrets Manager pattern
+- Implement health checks
+- Support horizontal scaling
+
+### Docker Development
+- Match production environment settings
+- Use internal container networking
+- Implement proper service discovery
+
+## 🚫 FORBIDDEN PATTERNS
+
+### Never Allow These
+```php
+// ❌ BANNED CODE PATTERNS
+'host' => 'localhost',
+'password' => 'secret123',
+'allowed_origins' => ['*'], // in production
+'debug' => true, // in production
+```
+
+```javascript
+// ❌ BANNED CODE PATTERNS
+const API_URL = 'http://localhost:8180';
+fetch('http://localhost:8180/api/users');
