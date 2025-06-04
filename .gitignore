@@ -4,6 +4,9 @@ docs/
 *.png
 *.md
 
+# Windows Security Zone.Identifier files
+*.Zone.Identifier
+
 # Dependencies
 node_modules/
 frontend/node_modules/
