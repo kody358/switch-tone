@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # Laravel API
+  laravel-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: switch-tone-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=switch_tone
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - switch-tone-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: switch-tone-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: switch_tone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - switch-tone-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: switch-tone-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - switch-tone-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  vendor_data:
+
+networks:
+  switch-tone-network:
+    driver: bridge 
