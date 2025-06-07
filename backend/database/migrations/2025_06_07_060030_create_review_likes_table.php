@@ -6,29 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('review_likes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->timestamp('created_at')->nullable();
+            $table->foreignId('review_id')->constrained('reviews')->onDelete('cascade')->comment('対象レビューID');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->comment('いいねしたユーザーID');
+            $table->timestamp('created_at')->nullable()->comment('いいね日時');
             
-            // Unique constraint: one like per user per review
+            // ユニーク制約：1ユーザーあたり1レビューに1いいねまで
             $table->unique(['review_id', 'user_id']);
             
-            // Add indexes for common queries
+            // よく使用されるクエリ用のインデックス
             $table->index('review_id');
             $table->index('user_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('review_likes');

@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->unsignedInteger('review_count')->default(0)->after('bio');
+            $table->unsignedInteger('review_count')->default(0)->after('password')->comment('投稿したレビュー数');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['avatar', 'bio', 'review_count']);
+            $table->dropColumn(['review_count']);
         });
     }
 };
