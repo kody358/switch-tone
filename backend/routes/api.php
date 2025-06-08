@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\KeySwitchController;
 use Illuminate\Http\Request;
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 // 認証不要のパブリックAPI
 Route::prefix('v1')->group(function () {
     
+    // 認証関連のエンドポイント
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    
     // ブランド関連のエンドポイント
     Route::get('/brands', [BrandController::class, 'index']);
     Route::get('/brands/{slugOrId}', [BrandController::class, 'show']);
@@ -28,12 +33,12 @@ Route::prefix('v1')->group(function () {
     
 });
 
-// 認証が必要なAPI（将来的にレビュー機能などで使用）
+// 認証が必要なAPI
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
-    // 認証済みユーザー情報
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    
+    // 認証関連のエンドポイント
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/me', [AuthController::class, 'me']);
     
     // 将来的にここにレビュー投稿などのエンドポイントを追加
 }); 
