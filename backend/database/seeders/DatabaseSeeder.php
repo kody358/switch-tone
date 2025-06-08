@@ -13,11 +13,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // サンプルキーボードスイッチデータを投入
+        $this->call([
+            SampleKeySwitchSeeder::class,
+        ]);
 
+        // テスト用ユーザーを作成
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'review_count' => 0,
         ]);
+
+        // 追加のテストユーザー（オプション）
+        // User::factory(10)->create();
     }
 }

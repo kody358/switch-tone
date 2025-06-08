@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KeySwitch extends Model
 {
     protected $fillable = [
+        'brand_id',
         'name',
-        'brand',
         'type',
         'price',
         'image_url',
@@ -28,6 +29,14 @@ class KeySwitch extends Model
         'total_travel' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * キーボードスイッチが属するブランドを取得
+     */
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
 
     /**
      * キーボードスイッチのレビューを取得
@@ -64,8 +73,34 @@ class KeySwitch extends Model
     /**
      * ブランドでフィルタリングするスコープ
      */
-    public function scopeOfBrand($query, string $brand)
+    public function scopeOfBrand($query, int $brandId)
     {
-        return $query->where('brand', $brand);
+        return $query->where('brand_id', $brandId);
+    }
+
+    /**
+     * ブランドスラッグでフィルタリングするスコープ
+     */
+    public function scopeOfBrandSlug($query, string $brandSlug)
+    {
+        return $query->whereHas('brand', function ($query) use ($brandSlug) {
+            $query->where('slug', $brandSlug);
+        });
+    }
+
+    /**
+     * 価格範囲でフィルタリングするスコープ
+     */
+    public function scopeInPriceRange($query, ?float $minPrice = null, ?float $maxPrice = null)
+    {
+        if ($minPrice !== null) {
+            $query->where('price', '>=', $minPrice);
+        }
+        
+        if ($maxPrice !== null) {
+            $query->where('price', '<=', $maxPrice);
+        }
+        
+        return $query;
     }
 }
