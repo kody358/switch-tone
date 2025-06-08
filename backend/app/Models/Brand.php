@@ -30,6 +30,14 @@ class Brand extends Model
     }
 
     /**
+     * ブランドのキーボードスイッチを取得（エイリアス）
+     */
+    public function switches(): HasMany
+    {
+        return $this->keySwitches();
+    }
+
+    /**
      * ブランドのアクティブなキーボードスイッチを取得
      */
     public function activeKeySwitches(): HasMany

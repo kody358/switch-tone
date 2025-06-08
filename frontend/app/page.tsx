@@ -1,5 +1,7 @@
+'use client';
+
 import { Suspense } from "react";
-import { switches } from "@/lib/data";
+import { useSwitches } from "@/hooks/useSwitches";
 import { SwitchCard } from "@/components/SwitchCard";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterBar } from "@/components/FilterBar";
@@ -9,47 +11,30 @@ export default function Home({
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  // Get search query from URL params
+  // URL パラメータから検索・フィルター条件を取得
   const search = typeof searchParams.search === "string" ? searchParams.search : "";
-
-  // Get filter params from URL
   const typeFilter = typeof searchParams.type === "string" ? searchParams.type.split(",") : [];
   const brandFilter = typeof searchParams.brand === "string" ? searchParams.brand.split(",") : [];
   const priceFilter = typeof searchParams.price === "string" ? searchParams.price.split(",") : [];
 
-  // Filter switches based on search and filters
-  const filteredSwitches = switches.filter((keySwitch) => {
-    // Search filter
-    if (search && !keySwitch.name.toLowerCase().includes(search.toLowerCase()) && 
-        !keySwitch.brand.toLowerCase().includes(search.toLowerCase())) {
-      return false;
-    }
-
-    // Type filter
-    if (typeFilter.length > 0 && !typeFilter.includes(keySwitch.type.toLowerCase())) {
-      return false;
-    }
-
-    // Brand filter
-    if (brandFilter.length > 0 && !brandFilter.includes(keySwitch.brand.toLowerCase())) {
-      return false;
-    }
-
-    // Price filter (simplified implementation)
-    if (priceFilter.length > 0) {
-      if (priceFilter.includes("budget") && (keySwitch.price && keySwitch.price > 0.5)) {
-        return false;
-      }
-      if (priceFilter.includes("mid-range") && (keySwitch.price && (keySwitch.price <= 0.5 || keySwitch.price > 1))) {
-        return false;
-      }
-      if (priceFilter.includes("premium") && (keySwitch.price && keySwitch.price <= 1)) {
-        return false;
-      }
-    }
-
-    return true;
+  // API からデータを取得
+  const { switches, loading, error } = useSwitches({
+    search,
+    type: typeFilter.length > 0 ? typeFilter : undefined,
+    brand: brandFilter.length > 0 ? brandFilter : undefined,
+    price: priceFilter.length > 0 ? priceFilter : undefined,
   });
+
+  if (error) {
+    return (
+      <div className="container px-4 py-8 mx-auto">
+        <div className="text-center py-12">
+          <h3 className="text-xl font-semibold mb-2 text-red-600">エラーが発生しました</h3>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -77,18 +62,34 @@ export default function Home({
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold">Key Switches</h2>
-            <p className="text-muted-foreground">
-              {filteredSwitches.length} {filteredSwitches.length === 1 ? 'switch' : 'switches'} found
-            </p>
+            {loading ? (
+              <p className="text-muted-foreground">読み込み中...</p>
+            ) : (
+              <p className="text-muted-foreground">
+                {switches.length} {switches.length === 1 ? 'switch' : 'switches'} found
+              </p>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredSwitches.map((keySwitch) => (
-              <SwitchCard key={keySwitch.id} keySwitch={keySwitch} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-200 h-4 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {switches.map((keySwitch) => (
+                <SwitchCard key={keySwitch.id} keySwitch={keySwitch} />
+              ))}
+            </div>
+          )}
 
-          {filteredSwitches.length === 0 && (
+          {!loading && switches.length === 0 && (
             <div className="text-center py-12">
               <h3 className="text-xl font-semibold mb-2">No switches found</h3>
               <p className="text-muted-foreground">
