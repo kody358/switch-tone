@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { KeySwitch } from "@/lib/types";
 import { SoundChart } from "./SoundChart";
-import { getAverageSoundProfile } from "@/lib/data";
+// import { getAverageSoundProfile } from "@/lib/data"; // 削除 - 将来的にAPIから取得
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
@@ -15,7 +15,8 @@ interface SwitchCardProps {
 }
 
 export function SwitchCard({ keySwitch, className }: SwitchCardProps) {
-  const avgProfile = getAverageSoundProfile(keySwitch.id);
+  // TODO: 将来的にAPIからサウンドプロファイルを取得
+  const avgProfile = 5; // デフォルト値
   
   // Determine badge color based on switch type
   const getBadgeVariant = (type: string) => {
@@ -70,7 +71,7 @@ export function SwitchCard({ keySwitch, className }: SwitchCardProps) {
             <p className="text-sm text-muted-foreground mb-2">{keySwitch.brand}</p>
             
             {keySwitch.price && (
-              <p className="text-sm font-medium mb-3">${keySwitch.price.toFixed(2)} per switch</p>
+              <p className="text-sm font-medium mb-3">¥{(keySwitch.price / 100).toFixed(0)} per switch</p>
             )}
             
             <div className="flex items-center justify-center mt-2">
